@@ -7,7 +7,7 @@
 <div class="decompte">
     <table width="600">
     <?php
-    if ($_SESSION['uid'] == 33)
+    if ($_SESSION['pseudo'] == 'etudiant')
     { ?>
         <tr><th>rang</th><th style="text-align: left;">pseudo</th><th></th><th>elo</th><th>connecté(e) le</th><th>parties en cours</th><th>inscrit le</th></tr>
     <?php
