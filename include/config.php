@@ -5,6 +5,6 @@
 //define('SQL_USERNAME', 'usager');
 //define('SQL_PASSWORD', 'boulogne0');
 
-define('SQL_DSN',      'mysql:dbname=click;host=localhost');
+define('SQL_DSN',      'mysql:dbname=moi;host=localhost');
 define('SQL_USERNAME', 'root');
 define('SQL_PASSWORD', '');

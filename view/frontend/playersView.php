@@ -33,7 +33,7 @@
         $contenujoueur .= 'Gains: '.$statistique->gainstotaux().'<br /><br />';
         $detail = $joueur->detailJoueur($joueur->uid());
         $nb_parties = $managerJoueurs->count($detail['uid']);
-        if ($_SESSION['uid'] == 33)
+        if ($_SESSION['pseudo'] == 'etudiant')
         {
             ?>
             <tr>
