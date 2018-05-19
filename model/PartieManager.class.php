@@ -7,7 +7,8 @@ class PartieManager extends CoupManager
     
     public function __construct()
     {
-        $this->_uidActif = $_SESSION['uid'];      
+        if (isset($_SESSION['uid']))
+            $this->_uidActif = $_SESSION['uid'];      
         $this->positiondepart();
     }
     
@@ -187,8 +188,9 @@ class PartieManager extends CoupManager
     }
 
 
-    public function effacer($nopartie, $uidActif)
+    public function effacer($nopartie)
     {
+        //$uidActif
         $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $requete = "select * from parties where gid = $nopartie";
         $q = $db->query($requete);
@@ -211,7 +213,7 @@ class PartieManager extends CoupManager
         }
         header('Location:  index.php?action=mes parties terminées');
     }
-    
+   
     public function acepter($nopartie, $uidActif)
     {
         $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);

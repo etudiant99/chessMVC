@@ -204,7 +204,7 @@ class Partie  extends PartieManager
         switch ($trait)
         {
             case 1:   // Trait aux blancs
-                if ($this->_tempsRestant == '0j 0h 0min 0s' and $_SESSION['uid'] == $this->uidb()) //etudiant
+                if ($this->_tempsRestant == '0j 0h 0min 0s') //etudiant
                 {
                     // Total de jours de réserve, additionné avec ce qui reste
                     $changement_b = $this->reserve_uidb() + $rnombre_jours_restant;
@@ -216,7 +216,7 @@ class Partie  extends PartieManager
                     $this->_reserveBlanche = $this->reserve_uidb();
                 break;
             case -1: // Trait aux noirs
-                if (($this->_tempsRestant == '0j 0h 0min 0s') and ($_SESSION['uid'] == $this->uidn()))
+                if ($this->_tempsRestant == '0j 0h 0min 0s')
                 {
                     // Total de jours de réserve, additionné avec ce qui reste
                     $changement_n = $this->reserve_uidn() + $rnombre_jours_restant;
