@@ -504,18 +504,49 @@ class Partie  extends PartieManager
     protected function calculJourMinuteSeconde()
     {
         $temps_maximum_en_secondes = strtotime($this->datederniercoup())+(86400* $this->cadencep());
-        if ($temps_maximum_en_secondes == 259200)
+        switch ($this->cadencep())
         {
-            $temp_restant = "";
-            $nombre_jours_restant = 0;
-            $nombre_heures_restant = 0;
-            $nombre_minutes_restant = 0;
-            $nombre_secondes_restant = 0;
-            $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
-            $this->_tempsRestant = $temp_restant;
-             
-            return;
+            case 1:
+                if ($temps_maximum_en_secondes == 86400)
+                {
+                    $temp_restant = "";
+                    $nombre_jours_restant = 0;
+                    $nombre_heures_restant = 0;
+                    $nombre_minutes_restant = 0;
+                    $nombre_secondes_restant = 0;
+                    $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
+                    $this->_tempsRestant = $temp_restant;
+                    return;
+                    break;
+                }
+            case 2:
+                if ($temps_maximum_en_secondes == 172800)
+                {
+                    $temp_restant = "";
+                    $nombre_jours_restant = 0;
+                    $nombre_heures_restant = 0;
+                    $nombre_minutes_restant = 0;
+                    $nombre_secondes_restant = 0;
+                    $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
+                    $this->_tempsRestant = $temp_restant;
+                    return;
+                    break;
+                }
+            case 3:
+                if ($temps_maximum_en_secondes == 259200)
+                {
+                    $temp_restant = "";
+                    $nombre_jours_restant = 0;
+                    $nombre_heures_restant = 0;
+                    $nombre_minutes_restant = 0;
+                    $nombre_secondes_restant = 0;
+                    $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
+                    $this->_tempsRestant = $temp_restant;
+                    return;
+                    break;
+                }
         }
+        
 
         $nombre_secondes_maintenant = time();
 

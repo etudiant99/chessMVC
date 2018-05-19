@@ -131,8 +131,12 @@ if (isset($_GET['action'])) {
         tournerEchiquier();
     }
     elseif ($_GET['action'] == 'joueur') {
-        
         joueur($_GET['id']);
+    }
+    elseif ($_GET['action'] == 'effacer partie') {
+        $nopartie = $_GET['no'];
+        $managerParties = new PartieManager;
+        $managerParties->effacerpartie($nopartie);
     }
     elseif ($_GET['action'] == 'traiter joueur'){
         $but = $_GET['but'];

@@ -27,7 +27,6 @@
             <td style="text-align: right; padding-right: 10px;">Temps maximum par coup</td>
             <td style="text-align: right;">
                 <select name="cadence">
-                    <option value="0">0 journée/coup</option>
                     <option value="1">1 journée/coup</option>
                     <option value="2">2 journée/coup</option>
                     <option value="3" selected="">3 journée/coup</option>                        
