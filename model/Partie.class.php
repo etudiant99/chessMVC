@@ -395,7 +395,18 @@ class Partie  extends PartieManager
         $aujourdhui = new DateTime();
         $DateFin = new DateTime($this->interval());
         $DateDernierCoup = new DateTime($this->_date_dernier_coup);
-        $temps_alloue = new DateInterval('P3D');
+        switch ($this->cadencep())
+        {
+            case 1:
+                $temps_alloue = new DateInterval('P1D');
+                break;
+            case 2:
+                $temps_alloue = new DateInterval('P2D');
+                break;
+            case 3:
+                $temps_alloue = new DateInterval('P3D');
+                break;
+        }
         $TempsRestant = $aujourdhui->diff($DateFin);
         if($aujourdhui->sub($temps_alloue) > $DateDernierCoup)
         {
@@ -413,7 +424,18 @@ class Partie  extends PartieManager
         $aujourdhui = new DateTime();
         $DateFin = new DateTime($this->interval());
         $DateDernierCoup = new DateTime($this->_date_dernier_coup);
-        $temps_alloue = new DateInterval('P3D');
+        switch ($this->cadencep())
+        {
+            case 1:
+                $temps_alloue = new DateInterval('P1D');
+                break;
+            case 2:
+                $temps_alloue = new DateInterval('P2D');
+                break;
+            case 3:
+                $temps_alloue = new DateInterval('P3D');
+                break;
+        }
         $TempsRestant = $aujourdhui->diff($DateFin);
         if($aujourdhui->sub($temps_alloue) > $DateDernierCoup)
         {
