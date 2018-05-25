@@ -22,12 +22,13 @@
             {
                 $joueur = $joueurs->trouveJoueur($partie->getAdversaire());
                 $statistique = $joueurs->get($joueur->uid());
-                $partie->duree_restante();
+                //$partie->duree_restante();
                 $contenujoueur = $joueur->pseudo().'<br />';
                 $contenujoueur .= 'Elo: '.$joueur->elo().'<br />';
                 $contenujoueur .= 'Age: '.$joueur->age().'<br />';
                 $contenujoueur .= 'Parties: '.$statistique->partiestotales().'<br />';
                 $contenujoueur .= 'Gains: '.$statistique->gainstotaux().'<br /><br />';
+                $TempsRestant = $partie->calculJourMinuteSeconde();                    
                 $compteur++;
                 ?>
                 <tr>
@@ -35,7 +36,7 @@
                     <td><?php echo $partie->gid() ?></td>
                     <td><?php echo $partie->getImageMaCouleur() ?></td>
                     <td class="infobulle" data-info="<?php echo $contenujoueur; ?><img src='<?php echo $joueur->photo() ?>'"><?php echo $joueur->pseudoimage() ?></td>
-                    <td><?php echo $partie->tempsRestant() ?></td>
+                    <td><?php echo $TempsRestant->d.'j '.$TempsRestant->h.'h '.$TempsRestant->i.'min '.$TempsRestant->s.'s'; ?></td>
                     <td><?php echo $partie->getNbCoups() ?></td>
                     <td><?php echo $partie->getTour() ?></td>
                 </tr>

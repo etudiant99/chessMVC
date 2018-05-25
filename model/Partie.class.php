@@ -48,7 +48,6 @@ class Partie  extends PartieManager
         
     public function __construct(array $donnees)
     {
-        //var_dump($donnees);
         $this->hydrate($donnees);
         $this->setImageMaCouleur();
         $this->setTour();
@@ -175,138 +174,10 @@ class Partie  extends PartieManager
         }
         $this->_titre = $phrase;
     }
-    
+
     public function getTitre()
     {
         return $this->_titre;
-    }
-    
-    public function duree_restante()
-    {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-
-        $this->calculJourMinuteSeconde();
-        $gid = $this->gid();
-        $trait = $this->getTrait(); // 1 blancs  -1 noirs
-        $temps_maximum_en_secondes = strtotime($this->datederniercoup())+(86400* $this->cadencep());
-        $nombre_secondes_maintenant = time();
-        $reste = $temps_maximum_en_secondes - $nombre_secondes_maintenant; // en secondes
-        $rnombre_jours_restant = $reste/3600/24; // nous avons un nombre de secondes divisé par 3600 puis par 24
-
-        $changement_b = 0;
-        $changement_n = 0;
-        $nouvelle_reserve_b = ''; 
-        $nouvelle_reserve_n = '';
-        $this->_pourcentageABlancs = 0;
-        $this->_pourcentageANoirs = 0;
-        
-        // dependant si trait est aux blancs ou aux noirs
-        switch ($trait)
-        {
-            case 1:   // Trait aux blancs
-                if ($this->_tempsRestant == '0j 0h 0min 0s') //etudiant
-                {
-                    // Total de jours de réserve, additionné avec ce qui reste
-                    $changement_b = $this->reserve_uidb() + $rnombre_jours_restant;
-                    $this->_reserveBlanche = $changement_b;
-                    $nouvelle_reserve_b = $changement_b;
-                    //$this->_tour = '<a href="?action=terminer partie&amp;gid='.$this->gid().'">partie terminée</a>';
-                }
-                else
-                    $this->_reserveBlanche = $this->reserve_uidb();
-                break;
-            case -1: // Trait aux noirs
-                if ($this->_tempsRestant == '0j 0h 0min 0s')
-                {
-                    // Total de jours de réserve, additionné avec ce qui reste
-                    $changement_n = $this->reserve_uidn() + $rnombre_jours_restant;
-                    $this->_reserveNoire = $changement_n;
-                    $nouvelle_reserve_n = $changement_n;
-                    //$this->_tour = '<a href="?action=terminer partie&amp;gid='.$this->gid().'">partie terminée</a>';
-                }
-                else
-                    $this->_reserveNoire =  $this->reserve_uidn();
-                    
-                break;
-        }
-        
-        // calcul des nouveaux pourcentages, pour les blancs 
-        if ($nouvelle_reserve_b == '')
-            $this->_pourcentageABlancs = (int) $this->reserve_uidb()/$this->reservep()*100;
-        else
-        {
-            $this->_pourcentageABlancs = (int) $nouvelle_reserve_b/$this->reservep()*100; // pourcentage disponible pour les blancs
-            // si le temps est complètement épuisé, sinon ajustement
-            
-            if ($nouvelle_reserve_b == 0)
-            {
-                $this->_pourcentageABlancs = 0;
-                $this->_pourcentageBBlancs = 100;
-            }
-            else
-                $this->_pourcentageBBlancs = 100 - $this->_pourcentageABlancs;
-
-            // Cas où il n'y a plus de temps du tout (même plus de réserve), pour les blancs
-            if ($this->_pourcentageABlancs == 0)
-            {
-                //  ici c'est correct  les noirs gagnent au temps
-                $sql_un = "update parties set date_fin = now(), finalisation = '6' where gid=".$this->gid();
-                $sql_deux = "update statistiques set pertes_b = pertes_b+1  where uid=".$this->uidb();
-                $sql_trois = "update statistiques set gains_n = gains_n+1 where uid=".$this->uidn();
-        
-                if ($adversaire == $this->uidn())
-                    $this->calcule_elo($this->uidb(), $this->uidn(), 1);
-                else
-                    $this->calcule_elo($this->uidn(), $this->uidb(), 1);
-                
-
-                $resultat = $db->query($sql_un);
-                $resultat = $db->query($sql_deux);
-                $resultat = $db->query($sql_trois);
-                header('Location:  index.php?action=mes parties');
-            }
-        }
-
-        // calcul des nouveaux pourcentages, pour les noirs
-        if ($nouvelle_reserve_n == '') // pourcentage de 100%
-            $this->_pourcentageANoirs = (int) $this->reserve_uidn()/$this->reservep()*100; // pourcentage disponible pour les noirs
-        else
-        {
-            $this->_pourcentageANoirs = (int) $nouvelle_reserve_n/$this->reservep()*100; // pourcentage disponible pour les noirs
-            // si le temps est complètement épuisé, sinon ajustement
-            
-            if ($nouvelle_reserve_n == 0)
-            {
-                $this->_pourcentageANoirs = 0;
-                $this->_pourcentageBNoirs = 100;
-            }
-            else
-                $this->_pourcentageBNoirs = 0;
-
-            // Cas où il n'y a plus de temps du tout (même plus de réserve), pour les noirs
-            
-            if ($this->_pourcentageANoirs == 0)
-            {
-                //  ici c'est correct  les blancs gagnent au temps
-                $sql_un = "update parties set date_fin = now(), finalisation = '6' where gid=".$this->gid();
-                $sql_deux = "update statistiques set pertes_n = pertes_n+1  where uid=".$this->uidn();
-                $sql_trois = "update statistiques set gains_b = gains_b+1 where uid=".$this->uidb();
-        
-                if ($adversaire == $this->uidn())
-                    $this->calcule_elo($this->uidb(), $this->uidn(), 1);
-                else
-                    $this->calcule_elo($this->uidn(), $this->uidb(), 1);
-                
-
-                $resultat = $db->query($sql_un);
-                $resultat = $db->query($sql_deux);
-                $resultat = $db->query($sql_trois);
-                header('Location:  index.php?action=mes parties');
-            }
-            
-        }
-        $this->_changementB = $changement_b;
-        $this->_changementN = $changement_n;
     }
     
     public function actif()
@@ -396,12 +267,12 @@ class Partie  extends PartieManager
 
     public function reserve_uidb()
     {
-        return number_format($this->_reserve_uidb,1) ;
+        return $this->_reserve_uidb;
     }
 
     public function reserve_uidn()
     {
-        return number_format($this->_reserve_uidn,1);
+        return $this->_reserve_uidn;
     }
 
     public function finalisation()
@@ -501,78 +372,58 @@ class Partie  extends PartieManager
         $this->_nbcoupspossibles = $id;
     }
     
-    protected function calculJourMinuteSeconde()
+    private function interval()
     {
-        $temps_maximum_en_secondes = strtotime($this->datederniercoup())+(86400* $this->cadencep());
-        switch ($this->cadencep())
+        $dernier_coup  = $this->_date_dernier_coup;
+        $cadence = $this->cadencep();
+        switch ($cadence)
         {
             case 1:
-                if ($temps_maximum_en_secondes == 86400)
-                {
-                    $temp_restant = "";
-                    $nombre_jours_restant = 0;
-                    $nombre_heures_restant = 0;
-                    $nombre_minutes_restant = 0;
-                    $nombre_secondes_restant = 0;
-                    $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
-                    $this->_tempsRestant = $temp_restant;
-                    return;
-                    break;
-                }
+                return $dernier_coup.' + 1 day';
+                break;
             case 2:
-                if ($temps_maximum_en_secondes == 172800)
-                {
-                    $temp_restant = "";
-                    $nombre_jours_restant = 0;
-                    $nombre_heures_restant = 0;
-                    $nombre_minutes_restant = 0;
-                    $nombre_secondes_restant = 0;
-                    $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
-                    $this->_tempsRestant = $temp_restant;
-                    return;
-                    break;
-                }
+                return $dernier_coup.' + 2 day';
+                break;
             case 3:
-                if ($temps_maximum_en_secondes == 259200)
-                {
-                    $temp_restant = "";
-                    $nombre_jours_restant = 0;
-                    $nombre_heures_restant = 0;
-                    $nombre_minutes_restant = 0;
-                    $nombre_secondes_restant = 0;
-                    $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
-                    $this->_tempsRestant = $temp_restant;
-                    return;
-                    break;
-                }
+                return $dernier_coup.' + 3 day';
+                break;
         }
-        
+    }
 
-        $nombre_secondes_maintenant = time();
-
-        if ($temps_maximum_en_secondes > $nombre_secondes_maintenant)
+    public function calculVeritableJourMinuteSeconde()
+    {
+        $aujourdhui = new DateTime();
+        $DateFin = new DateTime($this->interval());
+        $DateDernierCoup = new DateTime($this->_date_dernier_coup);
+        $temps_alloue = new DateInterval('P3D');
+        $TempsRestant = $aujourdhui->diff($DateFin);
+        if($aujourdhui->sub($temps_alloue) > $DateDernierCoup)
         {
-            $reste = $temps_maximum_en_secondes - $nombre_secondes_maintenant;
-            $nombre_jours_restant = floor($reste/3600/24); // 2 jours
-            $reste = $reste % (3600*24);
-            $nombre_heures_restant = floor($reste/3600); // 19 heures
-            $reste = $reste % 3600;
-            $nombre_minutes_restant = floor($reste/60); // 42 minutes
-            $reste = $reste % 60;
-            $nombre_secondes_restant = floor($reste); // 40 secondes
-        }
-        else
-        {
-            $nombre_jours_restant = 0;
-            $nombre_heures_restant = 0;
-            $nombre_minutes_restant = 0;
-            $nombre_secondes_restant = 0;
+            $TempsRestant->d = -$TempsRestant->d;
+            $TempsRestant->h = -$TempsRestant->h;
+            $TempsRestant->i = -$TempsRestant->i;
+            $TempsRestant->s = -$TempsRestant->s;
         }
 
-        $temp_restant = $nombre_jours_restant."j ".$nombre_heures_restant."h ".$nombre_minutes_restant."min ".$nombre_secondes_restant."s";
-        $this->_tempsRestant = $temp_restant;
-        
-        return;
+        return $TempsRestant;
+    }
+
+    public function calculJourMinuteSeconde()
+    {
+        $aujourdhui = new DateTime();
+        $DateFin = new DateTime($this->interval());
+        $DateDernierCoup = new DateTime($this->_date_dernier_coup);
+        $temps_alloue = new DateInterval('P3D');
+        $TempsRestant = $aujourdhui->diff($DateFin);
+        if($aujourdhui->sub($temps_alloue) > $DateDernierCoup)
+        {
+            $TempsRestant->d = 0;
+            $TempsRestant->h = 0;
+            $TempsRestant->i = 0;
+            $TempsRestant->s = 0;
+        }
+
+        return $TempsRestant;
     }
 
     public function getreserveBlanche()
@@ -711,72 +562,71 @@ class Partie  extends PartieManager
     
     public function setTour()
     {
-        $this->setUsercolor();
+        $changement_b = 0;
+        $changement_n = 0;
+        $this->_pourcentageABlancs = 0;
+        $this->_pourcentageANoirs = 0;
+        $trait = $this->getTrait(); // 1 blancs  -1 noirs
+        $TempsRestant = $this->calculJourMinuteSeconde();
+        $tempsRestantVeritable = $this->calculVeritableJourMinuteSeconde();
         $this->Cliquable();
-        $mat = $this->getMat();
-        $partieNulle = $this->getPartieNulle();
-        
-        if ($this->getCliquable())
+        $this->setUsercolor();
+        $secondesJours = $tempsRestantVeritable->d*24*3600;
+        $secondesHeures = $tempsRestantVeritable->h*3600;
+        $secondesMinutes = $tempsRestantVeritable->i*60;
+        $secondes = $tempsRestantVeritable->s;
+        $temps_maximum_en_secondes = $secondesJours+$secondesHeures+$secondesMinutes+$secondes;
+        $nombre_secondes_maintenant = time();
+        $reste = $temps_maximum_en_secondes;
+        $rnombre_jours_restant = $temps_maximum_en_secondes/3600/24; // nous avons un nombre de secondes divisé par 3600 puis par 24
+        $letemps = $TempsRestant->d.'j '.$TempsRestant->h.'h '.$TempsRestant->i.'min '.$TempsRestant->s.'s';
+        if($letemps != '0j 0h 0min 0s')
         {
-            $temps_maximum_en_secondes = strtotime($this->datederniercoup())+(86400* $this->cadencep());
-            $nombre_secondes_maintenant = time();
-            if ($temps_maximum_en_secondes < $nombre_secondes_maintenant and !$mat and !$partieNulle)
-            {
-                switch($this->getUserColor())
-                {
-                    case 1: // blancs
-                        $this->duree_restante();
-                        if ($this->getreserveBlanche() < 0)
-                        {
-                            $this->_tour = '<a href="?action=terminer partie&amp;gid='.$this->gid().'">partie terminée</a>';
-                            $this->setLaclasse("fini");
-                        }
-                        else
-                        {
-                            $this->_tour = '<a href="?action=montrer partie&amp;gid='.$this->gid().'">à vous de jouer</a>';
-                            $this->setLaclasse("vous");
-                        }
-                        break;
-                    case 0: // noirs
-                        $this->duree_restante();
-                        if ($this->getreserveNoire() < 0)
-                        {
-                            $this->_tour = '<a href="?action=terminer partie&amp;gid='.$this->gid().'">partie terminée</a>';
-                            $this->setLaclasse("fini");
-                        }
-                        else
-                        {
-                            //exit('oui '.$this->_reserveNoire);
-                            $this->_tour = '<a href="?action=montrer partie&amp;gid='.$this->gid().'">à vous de jouer</a>';
-                            $this->setLaclasse("vous");
-                        }
-                        break;
-                }
-            }
-            else
-            {
-                if ($mat)
-                {
-                    $this->_tour = '<a href="?action=mat&amp;gid='.$this->gid().'">échec et mat</a>';
-                    $this->setLaclasse("fini");
-                }
-                else if ($partieNulle)
-                {
-                    $this->_tour = '<a href="?action=nulle&amp;gid='.$this->gid().'">partie nulle</a>';
-                    $this->setLaclasse("fini");
-                } 
-                else
-                {
-                    $this->_tour = '<a href="?action=montrer partie&amp;gid='.$this->gid().'">à vous de jouer</a>';
-                    $this->setLaclasse("vous");
-                }
-            }
+            $this->_reserveBlanche = $this->reserve_uidb();
+            $this->_pourcentageABlancs = round($this->_reserveBlanche/$this->reservep()*100,2);
+            $this->_reserveNoire = $this->reserve_uidn();
+            $this->_pourcentageANoirs = round($this->_reserveNoire/$this->reservep()*100,2);
         }
         else
         {
-            $this->_tour = '<a href="?action=montrer partie&amp;gid='.$this->gid().'">à votre adversaire</a>';
-            $this->setLaclasse("adversaire");
+            switch ($trait)
+            {
+                case 1:
+                    $changement_b = $this->reserve_uidb() + $rnombre_jours_restant;
+                    $this->_changementB = $changement_b;
+                    $this->_reserveBlanche = $this->reserve_uidb() + $rnombre_jours_restant;
+                    $this->_pourcentageABlancs = round($this->_reserveBlanche/$this->reservep()*100,2);
+                    $this->_reserveNoire = $this->reserve_uidn();
+                    $this->_pourcentageANoirs = round($this->reserve_uidn()/$this->reservep()*100,2);
+                    break;
+                case -1:
+                    $changement_n = $this->reserve_uidn() + $rnombre_jours_restant;
+                    $this->_changementN = $changement_n;
+                    $this->_reserveBlanche = $this->reserve_uidb();
+                    $this->_pourcentageABlancs = round($this->reserve_uidb()/$this->reservep()*100,2);
+                    $this->_reserveNoire = $this->reserve_uidn() + $rnombre_jours_restant;
+                    $this->_pourcentageANoirs = round($this->_reserveNoire/$this->reservep()*100,2);
+                    break;
+            }
         }
+        if ($this->getCliquable())
+            switch ($trait)
+            {
+                case 1:
+                    if ($this->_pourcentageABlancs > 0)
+                        $this->_tour = '<a href="?action=montrer partie&amp;gid='.$this->gid().'">à vous de jouer</a>';
+                    else
+                        $this->_tour = '<a href="?action=terminer partie&amp;gid='.$this->gid().'">partie terminée</a>';
+                    break;
+                case -1:
+                    if ($this->_pourcentageANoirs > 0)
+                        $this->_tour = '<a href="?action=montrer partie&amp;gid='.$this->gid().'">à vous de jouer</a>';
+                    else
+                        $this->_tour = '<a href="?action=terminer partie&amp;gid='.$this->gid().'">partie terminée</a>';
+                    break;
+            }
+        else
+            $this->_tour = '<a href="?action=montrer partie&amp;gid='.$this->gid().'">à votre adversaire</a>';
     }
     
     public function setFinalisationStylisee($id)

@@ -325,7 +325,7 @@ function montrerPartie($nopartie)
     $flip = $partie->getFlipBase();
     $cliquable = $partie->getCliquable();
     $lastmove = $parties->Lastmove();
-    $partie->duree_restante();
+    //$partie->duree_restante();
     
     if($lastmove != '')
     {
