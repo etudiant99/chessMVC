@@ -1,5 +1,5 @@
 <?php
-class Couleur
+class Couleur extends Modele
 {
     protected $_unecouleur = array();
     

@@ -1,6 +1,5 @@
 <?php
-
-class ConnectionManager
+class ConnectionManager extends Modele
 {
     public function valide_infos($pseudo,$password)
     {
@@ -61,10 +60,9 @@ class ConnectionManager
         {
             $p = strip_tags($p);
         
-            $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-            $req = $bdd->prepare('SELECT id FROM login WHERE pseudo=:pseudo');
-            $req->execute(array(':pseudo'=>$p));
-            if($req->rowCount()==0)
+            $sql = 'SELECT id FROM login WHERE pseudo=?';
+            $q = $this->executerRequete($sql, array(':pseudo'=>$p));
+            if($q->rowCount()==0)
                 echo true;
             else
                 echo false;
@@ -80,7 +78,6 @@ class ConnectionManager
         
         if ($statut_pseudo == true)
         {
-            $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
             $uid = $this->getId($pseudo);
             $_SESSION['uid'] = $uid;
             $_SESSION['pseudo'] = $pseudo;
@@ -94,9 +91,8 @@ class ConnectionManager
   {
     try 
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "SELECT * FROM login where pseudo='".$pseudo."'";
-        $q = $db->query($requete);
+        $sql = "SELECT * FROM login where pseudo=?";
+        $q = $this->executerRequete($sql, array($pseudo));
         if (!$q)
             die("Table login inexistante");
 
@@ -116,9 +112,8 @@ class ConnectionManager
   
   public function getId($pseudo)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $requete = "SELECT * FROM login WHERE pseudo = '$pseudo'";
-    $q = $db->query($requete);
+    $sql = "SELECT * FROM login WHERE pseudo = ?";
+    $q = $this->executerRequete($sql, array($pseudo));
     $donnees = $q->fetch(PDO::FETCH_ASSOC);
     $uid = $donnees['uid'];
     
@@ -127,9 +122,8 @@ class ConnectionManager
   
   public function get($pseudo)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $requete = "SELECT * FROM login WHERE pseudo = '$pseudo'";
-    $q = $db->query($requete);
+    $sql = "SELECT * FROM login WHERE pseudo = ?";
+    $q = $this->executerRequete($sql, array($pseudo));
     $donnees = $q->fetch(PDO::FETCH_ASSOC);
 
     return new Connection($donnees);
@@ -137,19 +131,16 @@ class ConnectionManager
 
   public function count($id)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $requete = "SELECT COUNT(*) FROM verif where id=$id";
-
-    return $db->query($requete)->fetchColumn();
+    $sql = "SELECT COUNT(*) FROM verif where id=?";
+    return $this->executerRequete($sql, array($id));
   }
   
   public function getList()
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
     $connections = array();
         
-    $requete = 'SELECT * FROM verif';
-    $q = $db->query($requete);
+    $sql = 'SELECT * FROM verif';
+    $q = $this->executerRequete($sql);
     
     while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
     {
@@ -161,34 +152,27 @@ class ConnectionManager
     
   public function add($uid)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $requete = "update login set connecte = true where uid = $uid";
-    $q = $db->query($requete);
-    $requete = "update users set date_connection = now() where uid = $uid ";
-    $q = $db->query($requete);
-    $requete = "insert into verif (uid) values ('$uid')";
-    $q = $db->query($requete);
+    $sql = "update login set connecte = true where uid = ?";
+    $q = $this->executerRequete($sql, array($uid));
+    $sql = "update users set date_connection = now() where uid = ?";
+    $q = $this->executerRequete($sql, array($uid));
+    $sql = "insert into verif (uid) values ('$uid')";
+    $q = $this->executerRequete($sql);
   }
   
   public function connection($uidActif)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $requete = 'UPDATE login SET connecte=true where uid='.$uidActif;
-    $q = $db->query($requete);
-    
+    $sql = 'UPDATE login SET connecte=true where uid=?';
+    $q = $this->executerRequete($sql, array($uidActif));
   }
     
   public function quitter($uidActif)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $requete = 'UPDATE login SET connecte=false where uid='.$uidActif;
-    $q = $db->query($requete);
-        
-    $requete = 'UPDATE login SET connecte=false where uid='.$uidActif;
-    $q = $db->query($requete);
-        
-    $requete = "DELETE from verif where uid=$uidActif";
-    $q = $db->query($requete);
+    $sql = 'UPDATE login SET connecte=false where uid=?';
+    $q = $this->executerRequete($sql, array($uidActif));
+                
+    $sql = "DELETE from verif where uid=?";
+    $q = $this->executerRequete($sql, array($uidActif));
         
     header('Location: ./');   
   }

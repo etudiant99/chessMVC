@@ -11,9 +11,9 @@ class StatistiqueManager extends Piece
     
     public function get($uid)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $uid = (int) $uid;
-        $q = $db->query('SELECT * FROM statistiques WHERE uid='.$uid);
+        $sql = 'SELECT * FROM statistiques WHERE uid=?';
+        $q = $this->executerRequete($sql, array($uid));
         if (!$q)
             die("Table statistiques inexistante");
 
@@ -26,12 +26,10 @@ class StatistiqueManager extends Piece
 
     public function getList()
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $statistiques = array();
         
-        $requete = 'SELECT * FROM statistiques';
-        
-        $q = $db->query($requete);
+        $sql = 'SELECT * FROM statistiques';
+        $q = $this->executerRequete($sql);
 
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -43,9 +41,9 @@ class StatistiqueManager extends Piece
 
     public function nbpartiesjouees()
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = 'SELECT * FROM statistiques';
-        $q = $db->query($requete);
+        $sql = 'SELECT * FROM statistiques';
+        $q = $this->executerRequete($sql);
+        
         $parties_jouees = 0;
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {

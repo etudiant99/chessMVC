@@ -1,5 +1,4 @@
 <?php
-require_once "./include/config.php";
 function chargerClasse($classname)
 {
     require './model/'.$classname.'.class.php';

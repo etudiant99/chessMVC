@@ -14,9 +14,8 @@ class PartieManager extends CoupManager
     
     public function partieencours($pseudo)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        //$requete = "select * from login where pseudo='$pseudo'";
-        $q = $db->query("SELECT * FROM login WHERE pseudo = '".$pseudo."'");
+        $sql = "SELECT * FROM login WHERE pseudo = ?";
+        $q = $this->executerRequete($sql, array($pseudo));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $uid = $donnees['uid'];
         
@@ -37,9 +36,7 @@ class PartieManager extends CoupManager
     }
 
     public function get($id)
-    {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        
+    {   
         $this->letrait($id);
         $this->setIgn($id);
         $trait = $this->getTrait();
@@ -57,10 +54,9 @@ class PartieManager extends CoupManager
          }
         $this->nbCoupsPossibles($id,$end);
         
-        
         $id = (int) $id;
-        
-        $q = $db->query('SELECT * FROM parties WHERE gid = '.$id);
+        $sql = 'SELECT * FROM parties WHERE gid = ?';
+        $q = $this->executerRequete($sql, array($id));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $donnees['actif'] = $this->_uidActif;
         $donnees['trait'] = $trait;
@@ -77,36 +73,36 @@ class PartieManager extends CoupManager
     
     public function countencours()
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "SELECT COUNT(*) FROM parties WHERE finalisation=0";
+        $sql = "SELECT COUNT(*) AS compteur FROM parties WHERE finalisation=0";
+        $req = $this->executerRequete($sql);
+        $nb = $req->fetchColumn();
 
-        return $db->query($requete)->fetchColumn();
+        return  $nb;
     }
 
     public function countpartiesblancs($uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "SELECT COUNT(*) FROM parties WHERE finalisation=0 and uidb=$uidActif";
+        $sql = "SELECT COUNT(*) AS compteur FROM parties WHERE finalisation=0 and uidb=?";
+        $req = $this->executerRequete($sql, array($uidActif));
+        $nb = $req->fetchColumn();
 
-        return $db->query($requete)->fetchColumn();
+        return $nb;
     }
 
     public function countpartiesnoirs($uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "SELECT COUNT(*) FROM parties WHERE finalisation=0 and uidn=$uidActif";
-
-        return $db->query($requete)->fetchColumn();
+        $sql = "SELECT COUNT(*) AS compteur FROM parties WHERE finalisation=0 and uidn=?";
+        $req = $this->executerRequete($sql, array($uidActif));
+        $nb = $req->fetchColumn();
+        
+        return $nb;
     }
 
     public function setListeParties()
     {
         $parties = array();
-        
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "SELECT * FROM parties where finalisation=0 ORDER BY gid";
-        
-        $q = $db->query($requete);
+        $sql = "SELECT * FROM parties where finalisation=0 ORDER BY gid";
+        $q = $this->executerRequete($sql);
 
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -124,11 +120,9 @@ class PartieManager extends CoupManager
     public function setListePartiesActif($joueurActif)
     {
         $parties = array();
-        
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "SELECT * FROM parties where (uidb=$joueurActif or uidn=$joueurActif) and finalisation=0 ORDER BY gid";
+        $sql = "SELECT * FROM parties where (uidb=? or uidn=?) and finalisation=0 ORDER BY gid";
+        $q = $this->executerRequete($sql, array($joueurActif,$joueurActif));
 
-        $q = $db->query($requete);
         if (!$q)
             die("Table parties inexistante");
 
@@ -148,11 +142,10 @@ class PartieManager extends CoupManager
 
     public function getListPartiesterminees($uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $parties = array();
         
         
-    $requete = "select p.gid, 
+    $sql = "select p.gid, 
                        p.uidb, 
                        p.uidn, 
                        p.finalisation, 
@@ -175,8 +168,7 @@ class PartieManager extends CoupManager
                   and p.date_fin != '0000-00-00' 
                   and efface!=$uidActif order by gid";
 
-        
-        $q = $db->query($requete);
+        $q = $this->executerRequete($sql);
 
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -190,35 +182,32 @@ class PartieManager extends CoupManager
 
     public function effacer($nopartie)
     {
-        //$uidActif
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "select * from parties where gid = $nopartie";
-        $q = $db->query($requete);
+        $sql = "select * from parties where gid = ?";
+        $q = $this->executerRequete($sql, array($nopartie));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
 
         $resultat = $donnees['efface'];
         
         if ($resultat == 0)
         {
-            $requete = "update parties set efface = $uidActif where gid=$nopartie";
-            $resultat1 = $db->query($requete);            
+            $sql = "update parties set efface = ?  where gid=?";
+            $q = $this->executerRequete($sql, array($uidActif,$nopartie));           
         }
         else
         {
-            $requete1 = "delete from coups where cip=$nopartie";
-            $resultat1 = $db->query($requete1);
+            $sql = "delete from coups where cip=?";
+            $this->executerRequete($sql, array($nopartie));
         
-            $requete2 = "delete from parties where gid=$nopartie";
-            $resultat2 = $db->query($requete2);
+            $sql = "delete from parties where gid=?";
+            $this->executerRequete($sql, array($nopartie));
         }
         header('Location:  index.php?action=mes parties terminées');
     }
    
     public function acepter($nopartie, $uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "select * from partiesproposees where gidp=$nopartie";
-        $q = $db->query($requete);
+        $sql = "select * from partiesproposees where gidp=?";
+        $q = $this->executerRequete($sql, array($nopartie));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         
         $cadence = $donnees['cadence'];
@@ -257,7 +246,7 @@ class PartieManager extends CoupManager
         }
         
         $sql = "select max(gid) as maximum from parties order by gid";
-        $q = $db->query($sql);
+        $q = $this->executerRequete($sql);
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $mon_numero_partie = $donnees['maximum'];
         
@@ -265,44 +254,46 @@ class PartieManager extends CoupManager
         $conversion++;
 
         $sql = "insert into parties (gid, uidb, uidn, date_debut, cadencep, reservep, date_dernier_coup, reserve_uidb, reserve_uidn) 
-        VALUES ($conversion, $uidb, $uidn, now(), $cadence, $reserve, now(), $reserve, $reserve)";
-        $db->exec($sql);
+        VALUES (?,?,?,now(),?,?, now(),?,?)";
+        $q = $this->executerRequete($sql, array($conversion,$uidb,$uidn,$cadence,$reserve,$reserve,$reserve));
         
-        $sql = "delete from partiesproposees where gidp=$mon_gdip";
-        $db->exec($sql);
+        $sql = "delete from partiesproposees where gidp=?";
+        $q = $this->executerRequete($sql, array($mon_gdip));
 
         header('Location: index.php?action=mes parties');
     }
     
     public function finTemps($uidActif,$nopartie)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $lapartie = $this->get($nopartie);
         $temps_maximum_en_secondes = strtotime($lapartie->datederniercoup())+(86400* $lapartie->cadencep());
         $nombre_secondes_maintenant = time();
         if ($temps_maximum_en_secondes < $nombre_secondes_maintenant)
         {
-            $q = $db->query('SELECT * FROM parties WHERE gid = '.$nopartie);
+            $sql = 'SELECT * FROM parties WHERE gid = ?';
+            $q = $this->executerRequete($sql, array($nopartie));
            	$donnees = $q->fetch(PDO::FETCH_ASSOC);
             $uidb = $donnees['uidb'];
             $uidn = $donnees['uidn'];
             
             if ($uidActif == $uidb)
             {
-                $requete1 = 'update parties set date_fin=now(),finalisation=6 where gid='.$nopartie;
-                $requete2 = 'update statistiques set pertes_b=pertes_b+1 where uid='.$uidActif;
-                $requete3 = 'update statistiques set gains_n=gains_n+1 where uid='.$uidn;
+                $sql = 'update parties set date_fin=now(),finalisation=6 where gid=?';
+                $this->executerRequete($sql, array($nopartie));
+                $sql = 'update statistiques set pertes_b=pertes_b+1 where uid=?';
+                $this->executerRequete($sql, array($uidActif));
+                $sql = 'update statistiques set gains_n=gains_n+1 where uid=?';
+                $this->executerRequete($sql, array($uidn));
             }
             else
             {
-                $requete1 = 'update parties set date_fin=now(),finalisation=5 where gid='.$nopartie;
-                $requete2 = 'update statistiques set pertes_n=pertes_n+1 where uid='.$uidActif;
-                $requete3 = 'update statistiques set gains_b=gains_b+1 where uid='.$uidb;
+                $sql = 'update parties set date_fin=now(),finalisation=5 where gid=?';
+                $this->executerRequete($sql, array($nopartie));
+                $sql = 'update statistiques set pertes_n=pertes_n+1 where uid=?';
+                $this->executerRequete($sql, array($uidActif));
+                $sql = 'update statistiques set gains_b=gains_b+1 where uid=?';
+                $this->executerRequete($sql, array($uidb));
             }
-            
-            $db->query($requete1);
-            $db->query($requete2);
-            $db->query($requete3);
             
             if ($uidActif == $uidn)
                 $this->calcule_elo($uidb,$uidn,1);
@@ -314,29 +305,30 @@ class PartieManager extends CoupManager
     
     public function terminerPartie($uidActif,$nopartie)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        
-        $q = $db->query('SELECT * FROM parties WHERE gid = '.$nopartie);
+        $sql = 'SELECT * FROM parties WHERE gid = ?';
+        $q = $this->executerRequete($sql, array($nopartie));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $uidb = $donnees['uidb'];
         $uidn = $donnees['uidn'];
 
         if ($uidActif == $uidb)
         {
-            $requete1 = 'update parties set date_fin=now(),finalisation=6 where gid='.$nopartie;
-            $requete2 = 'update statistiques set pertes_b=pertes_b+1 where uid='.$uidActif;
-            $requete3 = 'update statistiques set gains_n=gains_n+1 where uid='.$uidn;
+            $sql = 'update parties set date_fin=now(),finalisation=6 where gid=?';
+            $this->executerRequete($sql, array($nopartie));
+            $sql = 'update statistiques set pertes_b=pertes_b+1 where uid=?';
+            $this->executerRequete($sql, array($uidActif));
+            $sql = 'update statistiques set gains_n=gains_n+1 where uid=?';
+            $this->executerRequete($sql, array($uidn));
         }
         else
         {
-            $requete1 = 'update parties set date_fin=now(),finalisation=5 where gid='.$nopartie;
-            $requete2 = 'update statistiques set pertes_n=pertes_n+1 where uid='.$uidActif;
-            $requete3 = 'update statistiques set gains_b=gains_b+1 where uid='.$uidb;
+            $sql = 'update parties set date_fin=now(),finalisation=5 where gid=?';
+            $this->executerRequete($sql, array($nopartie));
+            $sql = 'update statistiques set pertes_n=pertes_n+1 where uid=?';
+            $this->executerRequete($sql, array($uidActif));
+            $sql = 'update statistiques set gains_b=gains_b+1 where uid=?';
+            $this->executerRequete($sql, array($uidb));
         }
-        
-        $db->query($requete1);
-        $db->query($requete2);
-        $db->query($requete3);
 
         if ($uidActif == $uidn)
             $this->calcule_elo($uidb,$uidn,1);
@@ -348,30 +340,30 @@ class PartieManager extends CoupManager
     
     public function abandonner($uidActif,$nopartie)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        //$requete1 = 'update parties set date_fin=now(),finalisation=3 where gid='.$nopartie;
-        
-        $q = $db->query('SELECT * FROM parties WHERE gid = '.$nopartie);
+        $sql = 'SELECT * FROM parties WHERE gid = ?';
+        $q = $this->executerRequete($sql, array($nopartie));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $uidb = $donnees['uidb'];
         $uidn = $donnees['uidn'];
         
         if ($uidActif == $uidb)
         {
-            $requete1 = 'update parties set date_fin=now(),finalisation=3 where gid='.$nopartie;
-            $requete2 = 'update statistiques set pertes_b=pertes_b+1 where uid='.$uidActif;
-            $requete3 = 'update statistiques set gains_n=gains_n+1 where uid='.$uidn;
+            $sql = 'update parties set date_fin=now(),finalisation=3 where gid=?';
+            $this->executerRequete($sql, array($nopartie));
+            $sql = 'update statistiques set pertes_b=pertes_b+1 where uid=?';
+            $this->executerRequete($sql, array($uidActif));
+            $sql = 'update statistiques set gains_n=gains_n+1 where uid=?';
+            $this->executerRequete($sql, array($uidn));
         }
         else
         {
-            $requete1 = 'update parties set date_fin=now(),finalisation=4 where gid='.$nopartie;
-            $requete2 = 'update statistiques set pertes_n=pertes_n+1 where uid='.$uidActif;
-            $requete3 = 'update statistiques set gains_b=gains_b+1 where uid='.$uidb;
+            $sql = 'update parties set date_fin=now(),finalisation=4 where gid=?';
+            $this->executerRequete($sql, array($nopartie));
+            $sql = 'update statistiques set pertes_n=pertes_n+1 where uid=?';
+            $this->executerRequete($sql, array($uidActif));
+            $sql = 'update statistiques set gains_b=gains_b+1 where uid=?';
+            $this->executerRequete($sql, array($uidb));
         }
-        
-        $db->query($requete1);
-        $db->query($requete2);
-        $db->query($requete3);
         
         if ($uidActif == $uidn)
             $this->calcule_elo($uidb,$uidn,1);
@@ -384,31 +376,32 @@ class PartieManager extends CoupManager
     public function nulle($gid)
     {
         $perdant = $_SESSION['uid'];
-        
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $q = $db->query('SELECT * FROM parties WHERE gid = '.$gid);
+        $sql = 'SELECT * FROM parties WHERE gid = ?';
+        $q = $this->executerRequete($sql, array($gid));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $uidb = $donnees['uidb'];
         $uidn = $donnees['uidn'];
 
         if ($perdant == $uidb)
         {
-            $sql_un = "update parties set date_fin = now(), finalisation = 2 where gid=$gid";
-            $sql_deux = "update statistiques set nulles_b = nulles_b+1  where uid=$uidb";
-            $sql_trois = "update statistiques set nulles_n = nulles_n+1 where uid=$uidn";
+            $sql = "update parties set date_fin = now(), finalisation = 2 where gid=?";
+            $this->executerRequete($sql, array($gid));
+            $sql = "update statistiques set nulles_b = nulles_b+1  where uid=?";
+            $this->executerRequete($sql, array($uidb));
+            $sql = "update statistiques set nulles_n = nulles_n+1 where uid=?";
+            $this->executerRequete($sql, array($uidn));
             $this->calcule_elo($uidb, $uidn, 0.5);
         }
         else
         {
-            $sql_un = "update parties set date_fin = now(), finalisation = 1 where gid=$gid";
-            $sql_deux = "update statistiques set nulles_n = nulles_n+1  where uid=$uidn";
-            $sql_trois = "update statistiques set nulles_b = nulles_b+1 where uid=$uidb";
+            $sql = "update parties set date_fin = now(), finalisation = 1 where gid=?";
+            $this->executerRequete($sql, array($gid));
+            $sql = "update statistiques set nulles_n = nulles_n+1  where uid=?";
+            $this->executerRequete($sql, array($uidn));
+            $sql = "update statistiques set nulles_b = nulles_b+1 where uid=?";
+            $this->executerRequete($sql, array($uidb));
             $this->calcule_elo($uidn, $uidb, 0.5);    
         }
-
-        $db->query($sql_un);
-        $db->query($sql_deux);
-        $db->query($sql_trois);
 
         header('Location: index.php?action=mes parties');
         
@@ -417,8 +410,8 @@ class PartieManager extends CoupManager
     
     public function mat($uidActif,$nopartie)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $q = $db->query('SELECT * FROM parties WHERE gid = '.$nopartie);
+        $sql = 'SELECT * FROM parties WHERE gid = ?';
+        $q = $this->executerRequete($sql, array($nopartie));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $uidb = $donnees['uidb'];
         $uidn = $donnees['uidn'];
@@ -434,61 +427,58 @@ class PartieManager extends CoupManager
         if ($conclusion == 7)
         {
             echo 'conclusion: 7'; exit();
-            $requete2 = 'UPDATE statistiques set gains_b=gains_b+1 WHERE uid='.$uidb;
-            $requete3 = 'UPDATE statistiques set pertes_n=pertes_n+1 WHERE uid='.$uidn;
+            $sql = 'UPDATE statistiques set gains_b=gains_b+1 WHERE uid=?';
+            $q = $this->executerRequete($sql, array($uidb));
+            $sql = 'UPDATE statistiques set pertes_n=pertes_n+1 WHERE uid=?';
+            $q = $this->executerRequete($sql, array($uidn));
             $this->calcule_elo($uidb,$uidn,1);
         }
         else
         {
             echo 'conclusion: 8'; exit();
-            $requete2 = 'UPDATE statistiques set gains_n=gains_n+1 WHERE uid='.$uidn;
-            $requete3 = 'UPDATE statistiques set pertes_b=pertes_b+1 WHERE uid='.$uidb;
+            $sql = 'UPDATE statistiques set gains_n=gains_n+1 WHERE uid=?';
+            $q = $this->executerRequete($sql, array($uidn));
+            $sql = 'UPDATE statistiques set pertes_b=pertes_b+1 WHERE uid=?';
+            $q = $this->executerRequete($sql, array($uidb));
             $this->calcule_elo($uidn,$uidb,1);
         }
-
-        $db->query($requete1);
-        $db->query($requete2);
-        $db->query($requete3);
 
         header('Location: index.php?action=mes parties');
     }
     
     public function miseajourcoup($trait,$gid)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-
-        $requete = 'UPDATE parties set trait='.$trait.',date_dernier_coup=now() where gid='.$gid;
-        $db->query($requete);
+        $sql = 'UPDATE parties set trait='.$trait.',date_dernier_coup=now() where gid=?';
+        $this->executerRequete($sql, array($gid));
     }
     
     
     public function effacerpartie($nopartie)
     {
         $uidActif = $_SESSION['uid'];
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $q = $db->query('select count(*) as nombre FROM parties WHERE gid = '.$nopartie);
+        $sql = 'select count(*) as nombre FROM parties WHERE gid = ?';
+        $q = $this->executerRequete($sql, array($nopartie));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $nombre = $donnees['nombre'];
         
         if ($nombre == 1)
         {
-            $requete = "select efface from parties where gid = $nopartie";
-            $resultat1 = $db->query($requete);
-            $donnees = $resultat1->fetch(PDO::FETCH_ASSOC);
+            $sql = "select efface from parties where gid = ?";
+            $q = $this->executerRequete($sql, array($nopartie));
+            $donnees = $q->fetch(PDO::FETCH_ASSOC);
             $reponse = $donnees['efface'];
             
             if ($reponse == 0)
             {
-                $requete = "update parties set efface = $uidActif where gid=$nopartie";
-                $resultat1 = $db->query($requete);
+                $sql = "update parties set efface = ? where gid=?";
+                $this->executerRequete($sql, array($uidActif,$nopartie));
             }
             else
             {
-                $requete1 = "delete from coups where cip=$nopartie";
-                $resultat1 = $db->query($requete1);
-        
-                $requete2 = "delete from parties where gid=$nopartie";
-                $resultat2 = $db->query($requete2);
+                $sql = "delete from coups where cip=?";
+                $this->executerRequete($sql, array($nopartie));
+                $sql = "delete from parties where gid=?";
+                $this->executerRequete($sql, array($nopartie));
             }
         }
         header('Location:  index.php?action=parties terminées');
@@ -773,48 +763,27 @@ class PartieManager extends CoupManager
     
         $elo_retourne_blanc = round($nouvel_elo_blanc);
         $elo_retourne_noir = round($nouvel_elo_noir);
-
-        // Connexion a la base de données
-        try
-        {
-            $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        }
-        Catch (PDOException $e)
-        {
-            die("Erreur ! : ".$e->getMessage());
-        }
     
-        $sql = "update login set elo = $elo_retourne_blanc where uid=$uidb";
-        $resultat = $dbh->query($sql);
-    
-        $sql = "update login set elo = $elo_retourne_noir where uid=$uidn";
-        $resultat = $dbh->query($sql);
-   
+        $sql = "update login set elo = ? where uid=?";
+        $this->executerRequete($sql, array($elo_retourne_blanc,$uidb));
+        $sql = "update login set elo = ? where uid=?";
+        $this->executerRequete($sql, array($elo_retourne_noir,$uidn));
     }
 
     private function calcul_coefficient($uid)
     {
-        // Connexion a la base de données
-        try
-        {
-            $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        }
-        Catch (PDOException $e)
-        {
-            die("Erreur ! : ".$e->getMessage());
-        }
         $retour = array();    
 
-        $requete = "select elo, coefficient from login where uid=$uid";
-        $resultat = $dbh->query($requete);
-        $ligne = $resultat->fetch();
+        $sql = "select elo, coefficient from login where uid=?";
+        $q = $this->executerRequete($sql, array($uid));
+        $ligne = $q->fetch();
     
         $elo = $ligne['elo'];
         $coffiecient_enr = $ligne['coefficient'];
     
-        $requete = "select count(*) as nombre from parties where uidb=$uid or uidn=$uid";
-        $resultat = $dbh->query($requete);
-        $ligne = $resultat->fetch();
+        $sql = "select count(*) as nombre from parties where uidb=? or uidn=?";
+        $q = $this->executerRequete($sql, array($uid,$uid));
+        $ligne = $q->fetch();
     
         $nombre_parties = $ligne['nombre'];
     
@@ -832,8 +801,8 @@ class PartieManager extends CoupManager
        
         if ($veritable_coefficient != $coffiecient_enr)
         {
-            $sql = "update login set coefficient = $veritable_coefficient where uid=$uid";
-            $resultat = $dbh->query($sql);
+            $sql = "update login set coefficient = ? where uid=?";
+            $this->executerRequete($sql, array($veritable_coefficient,$uid));
         }
             
         $retour['coefficient'] = $veritable_coefficient;

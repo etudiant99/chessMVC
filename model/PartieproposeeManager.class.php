@@ -1,5 +1,5 @@
 <?php
-class PartieproposeeManager
+class PartieproposeeManager extends Modele
 {
     public static $instance;
     
@@ -8,31 +8,29 @@ class PartieproposeeManager
         self::$instance = $this;
     }
 
-    public function add($prospect,$uidActif,$color,$cadence,$reserve,$lecommentaire)
-    {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        
+    public function add($prospect,$uidActif,$color,$cadence,$reserve,$commentaire)
+    {   
         $uid = $prospect;
-        $commentaire = $db->quote($lecommentaire);
-        
-        if ($uid != 0)
-            $requete = "INSERT INTO partiesproposees (prospect,origine,macouleur,cadence,reserve,commentaire) VALUES($uid,$uidActif,'$color',$cadence,$reserve,$commentaire)";
-        else
-            $requete = "INSERT INTO partiesproposees (origine,macouleur,cadence,reserve,commentaire) VALUES($uidActif,'$color',$cadence,$reserve,$commentaire)";
         
         if ($uid != $uidActif)
-            $q = $db->query($requete);
-            
+            if ($uid != 0)
+            {
+                $sql = "INSERT INTO partiesproposees (prospect,origine,macouleur,cadence,reserve,commentaire) VALUES(?,?,?,?,?,?)";
+                $q = $this->executerRequete($sql, array($uid,$uidActif,$color,$cadence,$reserve,$commentaire));
+            }
+            else
+            {
+                $sql = "INSERT INTO partiesproposees (origine,macouleur,cadence,reserve,commentaire) VALUES(?,?,?,?,?)";
+                $q = $this->executerRequete($sql, array($uidActif,$color,$cadence,$reserve,$commentaire));
+            }
 
         header('Location:  index.php?action=mes parties proposées&folder=-1');
     }
 
   public function get($id)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $id = (int) $id;
-    
-    $q = $db->query('SELECT * FROM partiesproposees WHERE gidp = '.$id);
+    $sql = 'SELECT * FROM partiesproposees WHERE gidp = ?';
+    $q = $this->executerRequete($sql, array($id));
     $donnees = $q->fetch(PDO::FETCH_ASSOC);
 
     return new Partieproposee($donnees);
@@ -40,19 +38,19 @@ class PartieproposeeManager
 
   public function count($personne)
   {
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $requete = "SELECT COUNT(*) FROM partiesproposees WHERE prospect=".$personne;
+    $sql = "SELECT COUNT(*) AS compteur FROM partiesproposees WHERE prospect=".$personne;
+    $req = $this->executerRequete($sql);
+    $nb = $req->fetchColumn();
 
-    return $db->query($requete)->fetchColumn();
+    return $nb;
   }
 
     public function getListmespp($uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $partiesproposees = array();
         
-        $requete = 'SELECT * FROM partiesproposees where origine = '.$uidActif;
-        $q = $db->query($requete);
+        $sql = 'SELECT * FROM partiesproposees where origine = ?';
+        $q = $this->executerRequete($sql, array($uidActif));
 
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -64,11 +62,10 @@ class PartieproposeeManager
 
     public function getListpppersonnelles($uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $partiesproposees = array();
         
-        $requete = 'SELECT * FROM partiesproposees where prospect = '.$uidActif;
-        $q = $db->query($requete);
+        $sql = 'SELECT * FROM partiesproposees where prospect = ?';
+        $q = $this->executerRequete($sql, array($uidActif));
 
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -80,12 +77,10 @@ class PartieproposeeManager
 
     public function getList($uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $partiesproposees = array();
         
-        $requete = 'SELECT * FROM partiesproposees where origine != '.$uidActif.' and prospect is null';
-        //exit($requete);
-        $q = $db->query($requete);
+        $sql = 'SELECT * FROM partiesproposees where origine != ? and prospect is null';
+        $q = $this->executerRequete($sql, array($uidActif));
 
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -97,12 +92,11 @@ class PartieproposeeManager
     
     public function getListPP($uidActif)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $joueurs = array();
     
-        $requete = 'select pp.gidp, l.elo, l.pseudo, l.connecte, pp.macouleur, pp.cadence, pp.reserve, pp.commentaire, pp.prospect, u.sexe 
+        $sql = 'select pp.gidp, l.elo, l.pseudo, l.connecte, pp.macouleur, pp.cadence, pp.reserve, pp.commentaire, pp.prospect, u.sexe 
             from partiesproposees pp left join login as l on pp.prospect=l.uid left join users as u on pp.prospect=u.uid  where pp.origine= '.$uidActif;
-        $q = $db->query($requete);
+        $q = $this->executerRequete($sql);
         
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -120,14 +114,13 @@ class PartieproposeeManager
     
     public function refuser($nopartie,$action)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "select * from partiesproposees where gidp=$nopartie";
-        $q = $db->query($requete);
+        $sql = "select * from partiesproposees where gidp=?";
+        $q = $this->executerRequete($sql, array($nopartie));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         
         $mon_gdip = $donnees['gidp'];
-        $sql = "delete from partiesproposees where gidp=$mon_gdip";
-        $db->exec($sql);
+        $sql = "delete from partiesproposees where gidp=?";
+        $q = $this->executerRequete($sql, array($mon_gdip));
         
         if ($action == 'refuser')
             header('Location: index.php?action=mes parties');

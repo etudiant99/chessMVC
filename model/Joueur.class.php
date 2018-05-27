@@ -1,5 +1,5 @@
 <?php
-class Joueur
+class Joueur extends CoupManager
 {
     private $_uid;
     private $_pseudo;
@@ -149,9 +149,7 @@ class Joueur
 
     public function detailJoueur($id)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        
-        $joueurs = new JoueurManager($db);
+        $joueurs = new JoueurManager;
 
         $composantes = array();
         

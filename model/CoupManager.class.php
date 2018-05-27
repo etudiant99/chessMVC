@@ -11,10 +11,8 @@ class CoupManager extends Echiquier
 
     public function letrait($cip)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        
-        $requete = 'SELECT * FROM coups where cip ='.$cip.' ORDER BY ordre DESC LIMIT 1';
-        $q = $db->query($requete);
+        $sql = 'SELECT * FROM coups where cip ='.$cip.' ORDER BY ordre DESC LIMIT 1';
+        $q = $this->executerRequete($sql);
         $data = $q->fetch(PDO::FETCH_ASSOC);
         
         if (strlen($data['coups']) < 6 and strlen($data['coups']) > 2)
@@ -32,16 +30,17 @@ class CoupManager extends Echiquier
 
     public function add($cip,$coup)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $parties = new PartieManager($db);
+        $parties = new PartieManager;
         
         // trouver le dernier coup de la bonne partie
-        $q = $db->query('select max(ordre) as maximum, coups, cip from coups where cip ='.$cip);
+        $sql = 'select max(ordre) as maximum, coups, cip from coups where cip =?';
+        $q = $this->executerRequete($sql, array($cip));
         $donnees = $q->fetch(PDO::FETCH_ASSOC);
         $ordre = $donnees['maximum'];
         if ($ordre != '')
         {
-            $q = $db->query('select max(ordre) as maximum, coups, cip from coups where cip ='.$cip.' and ordre='.$ordre);
+            $sql = 'select max(ordre) as maximum, coups, cip from coups where cip =? and ordre=?';
+            $q = $this->executerRequete($sql, array($cip,$ordre));
             $donnees = $q->fetch(PDO::FETCH_ASSOC);
             $lecoup = $donnees['coups'];
             $lecip = $donnees['cip'];
@@ -49,21 +48,21 @@ class CoupManager extends Echiquier
             if (strlen($lecoup) < 6)
             {
                 $ajout = $lecoup.' '.$coup;
-                $requete = "update coups set coups='".$ajout."' where cip =".$lecip." and ordre=".$ordre;
-                $q = $db->query($requete);
+                $sql = "update coups set coups=? where cip =? and ordre=?";
+                $q = $this->executerRequete($sql, array($ajout,$lecip,$ordre));
             }
             else
             {
-                $requete = "INSERT INTO coups (cip,coups) VALUES($cip,'$coup')";
-                $q = $db->query($requete);
+                $sql = "INSERT INTO coups (cip,coups) VALUES(?,?)";
+                $q = $this->executerRequete($sql, array($cip,$coup));
             }
-            $requete = "update parties set date_dernier_coup=now() where gip =".$lecip;
-            $q = $db->query($requete);
+            $sql = "update parties set date_dernier_coup=now() where gid =?";
+            $q = $this->executerRequete($sql, array($lecip));
         }
         else
         {
-            $requete = "INSERT INTO coups (cip,coups) VALUES($cip,'$coup')";
-            $q = $db->query($requete);
+            $sql = "INSERT INTO coups (cip,coups) VALUES(?,?)";
+            $q = $this->executerRequete($sql, array($cip,$coup));
         }
         
         $lapartie = $parties->get($cip);
@@ -87,8 +86,8 @@ class CoupManager extends Echiquier
   {
     $id = (int) $id;
     
-    $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-    $q = $db->query('SELECT * FROM coups');
+    $sql = 'SELECT * FROM coups';
+    $q = $this->executerRequete($sql);
     $donnees = $q->fetch(PDO::FETCH_ASSOC);
 
     return new Coup($donnees);
@@ -98,9 +97,8 @@ class CoupManager extends Echiquier
     {
         $joueurs = array();
         
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $requete = "SELECT * FROM coups";
-        $q = $db->query($requete);
+        $sql = "SELECT * FROM coups";
+        $q = $this->executerRequete($sql);
 
         while ($donnees = $q->fetch(PDO::FETCH_ASSOC))
         {
@@ -111,14 +109,15 @@ class CoupManager extends Echiquier
     
     public function nbCoups($numero)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $q = $db->query('select * from coups where cip='.$numero.' order by ordre desc');
+        $sql = 'select * from coups where cip=? order by ordre desc';
+        $q = $this->executerRequete($sql, array($numero));
         if (!$q)
             die("Table coups inexistante");
 
         $lescoups = $q->fetch(PDO::FETCH_ASSOC);
         
-        $r = $db->query('select count(*) as qt from coups where cip='.$numero);
+        $sql = 'select count(*) as qt from coups where cip=?';
+        $r = $this->executerRequete($sql, array($numero));
         $nombre = $r->fetch(PDO::FETCH_ASSOC);
         
         $compteur = $nombre['qt']*2;
@@ -131,14 +130,12 @@ class CoupManager extends Echiquier
     }
     
     public function setIgn($nopartie)
-    {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-            
+    {       
         $coups = array();
         $this->letrait($nopartie);
         
-        $requete = "select coups from coups where cip='".$nopartie."' order by ordre asc";
-        $q = $db->query($requete);
+        $sql = "select coups from coups where cip=? order by ordre asc";
+        $q = $this->executerRequete($sql, array($nopartie));
         
         $les_coups = " ";
         

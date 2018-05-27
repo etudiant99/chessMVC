@@ -97,7 +97,7 @@ class Piece extends Couleur
     public function setNom($piece)
     {
         
-        $this->_nompiece = $piece->nom();
+        //$this->_nompiece = $piece->nom();
     }
 
     public function Couleur($piece)

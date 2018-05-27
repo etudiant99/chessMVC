@@ -1,5 +1,5 @@
 <?php
-class Inscription
+class Inscription extends Modele
 {
     public function valide_infos($pseudo,$courriel)
     {
@@ -36,10 +36,8 @@ class Inscription
         else
         {
             // Vérification des informations
-            $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-
-            $requete = "select count(*) as nombre from login where pseudo = '$pseudo'";
-            $resultat = $dbh->query($requete);
+            $sql = "select count(*) as nombre from login where pseudo = ?";
+            $resultat = $this->executerRequete($sql, array($pseudo));
             $ligne = $resultat->fetch();
             $nombre = $ligne['nombre'];
 
@@ -67,9 +65,8 @@ class Inscription
             }
             else
             {
-                $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-                $requete = "select count(*) as nombre from users where courriel = '$courriel'";
-                $resultat = $dbh->query($requete);
+                $sql = "select count(*) as nombre from users where courriel = ?";
+                $resultat = $this->executerRequete($sql, array($courriel));
                 $ligne = $resultat->fetch();
                 $nombre = $ligne['nombre'];
                 if ($nombre > 0)
@@ -179,15 +176,14 @@ class Inscription
         $statut_pseudo = $panier['pseudo_ok'];
 
         if (($statut_pseudo == true) &&($type_confirmation == "hidden")){
-            $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
             $le_sexe_personne = 'h';
             
             $sql = "insert into users (sexe, courriel, date_inscription) 
             values ('$le_sexe_personne', '$courriel', now())";
-            $dbh->exec($sql);
+            $this->executerRequete($sql);
             
-            $requete = "select uid from users order by uid desc";
-            $resultat = $dbh->query($requete);
+            $sql = "select uid from users order by uid desc";
+            $resultat = $this->executerRequete($sql);
             $ligne = $resultat->fetch();
             $mon_uid = $ligne['uid'];      
 
@@ -195,10 +191,10 @@ class Inscription
             $invisible =  md5($secret);
             
             $sql = "insert into login (uid, pseudo, bidon, date_inscription) values ($mon_uid, '$pseudo', '$invisible', now())";
-            $dbh->exec($sql);
+            $this->executerRequete($sql);
             
             $sql = "insert into statistiques (uid) values ($mon_uid)";
-            $dbh->exec($sql);
+            $this->executerRequete($sql);
 
             $this->EnvoiCourriel($courriel,$pseudo,$secret);
             
