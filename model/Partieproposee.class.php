@@ -89,8 +89,7 @@ class Partieproposee
 
     public function detailPartieproposee($id)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $joueurs = new JoueurManager($db);
+        $joueurs = new JoueurManager;
         $composantes = array();
         
         $composantes['gidp'] = $this->gidp();
@@ -110,8 +109,7 @@ class Partieproposee
 
     public function detailMapartieproposee($id)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $joueurs = new JoueurManager($db);
+        $joueurs = new JoueurManager;
         
         $composantes = array();
         
