@@ -583,32 +583,31 @@ class Piece extends Couleur
     
     public function jouer($cip,$coup,$changementb,$changementn)
     {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
         $trait = $this->letrait($cip);
         
         if ($changementb != 0)
         {
-            $sql = "update parties set reserve_uidb = $changementb where gid=".$cip;
-            $resultat = $db->query($sql);
-            $sql = "update parties set date_dernier_coup = now() where gid=".$cip;
-            $resultat = $db->query($sql);
+            $sql = "update parties set reserve_uidb = $changementb where gid=?";
+            $resultat = $this->executerRequete($sql, array($cip));
+            $sql = "update parties set date_dernier_coup = now() where gid=?";
+            $resultat = $this->executerRequete($sql, array($cip));
         }
         else
         {
-            $sql = "update parties set date_dernier_coup = now() where gid=".$cip;
-            $resultat = $db->query($sql);
+            $sql = "update parties set date_dernier_coup = now() where gid=?";
+            $resultat = $this->executerRequete($sql, array($cip));
         }
         if ($changementn != 0)
         {
-            $sql = "update parties set reserve_uidn = $changementn where gid=".$cip;
-            $resultat = $db->query($sql);
-            $sql = "update parties set date_dernier_coup = now() where gid=".$cip;
-            $resultat = $db->query($sql);
+            $sql = "update parties set reserve_uidn = $changementn where gid=?";
+            $resultat = $this->executerRequete($sql, array($cip));
+            $sql = "update parties set date_dernier_coup = now() where gid=?";
+            $resultat = $this->executerRequete($sql, array($cip));
         }
         else
         {
-            $sql = "update parties set date_dernier_coup = now() where gid=".$cip;
-            $resultat = $db->query($sql);
+            $sql = "update parties set date_dernier_coup = now() where gid=?";
+            $resultat = $this->executerRequete($sql, array($cip));
         }
 
         $this->add($cip,$coup);

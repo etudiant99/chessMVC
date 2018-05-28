@@ -11,10 +11,9 @@ class CoupManager extends Echiquier
 
     public function letrait($cip)
     {
-        $sql = 'SELECT * FROM coups where cip ='.$cip.' ORDER BY ordre DESC LIMIT 1';
-        $q = $this->executerRequete($sql);
+        $sql = 'SELECT * FROM coups where cip =? ORDER BY ordre DESC LIMIT 1';
+        $q = $this->executerRequete($sql, array($cip));
         $data = $q->fetch(PDO::FETCH_ASSOC);
-        
         if (strlen($data['coups']) < 6 and strlen($data['coups']) > 2)
         {
             $letrait = -1;  // Noirs
@@ -70,14 +69,13 @@ class CoupManager extends Echiquier
         $uidb = $lapartie->uidb();
         $uidn = $lapartie->uidn();
         
-        
         if ($trait == $uidn)
             $ajustement = $uidb;
         else
             $ajustement = $uidn;
         
         
-        $parties->miseajourcoup($ajustement,$cip);
+        //$parties->miseajourcoup($trait,$cip);
         
         header('Location: index.php?action=mes parties');
     }

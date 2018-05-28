@@ -448,8 +448,8 @@ class PartieManager extends CoupManager
     
     public function miseajourcoup($trait,$gid)
     {
-        $sql = 'UPDATE parties set trait='.$trait.',date_dernier_coup=now() where gid=?';
-        $this->executerRequete($sql, array($gid));
+        $sql = 'UPDATE parties set trait=?,date_dernier_coup=now() where gid=?';
+        $this->executerRequete($sql, array($trait,$gid));
     }
     
     
