@@ -100,6 +100,7 @@ function mesparties()
 {
     $uidActif = $_SESSION['uid'];
     $managerPartieproposee = new PartieproposeeManager;
+    $joueurs = new JoueurManager;
     $mespartiesproposees = $managerPartieproposee->getListpppersonnelles($uidActif);
     
     if (count($mespartiesproposees) > 0)

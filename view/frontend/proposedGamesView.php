@@ -52,8 +52,8 @@ else
 ?>
 
 <div class="choix">
-    <a href="?action=mes parties&amp;folder=-1">Mes parties en cours</a><br />
-    <a href="?action=mes parties proposées&amp;folder=-1">Les parties que j'ai proposées</a><br /><br />
+    <a href="?action=mes parties">Mes parties en cours</a><br />
+    <a href="?action=mes parties proposées">Les parties que j'ai proposées</a><br /><br />
     <a href="?action=proposer partie">Proposer une partie</font></a>
 </div>
 

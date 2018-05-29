@@ -46,7 +46,7 @@
 </div>
 <div class="choix">
     <a href="?action=mes parties">Mes parties en cours</a><br />
-    <a href="?action=mes parties proposées&amp;folder=-1">Les parties que j'ai proposées</a><br />
+    <a href="?action=mes parties proposées">Les parties que j'ai proposées</a><br />
     <a href="?action=parties proposées">Les parties proposées par les autres joueurs</a><br /><br />
 </div>
 

@@ -64,19 +64,6 @@ class CoupManager extends Echiquier
             $q = $this->executerRequete($sql, array($cip,$coup));
         }
         
-        $lapartie = $parties->get($cip);
-        $trait = $this->letrait($cip);
-        $uidb = $lapartie->uidb();
-        $uidn = $lapartie->uidn();
-        
-        if ($trait == $uidn)
-            $ajustement = $uidb;
-        else
-            $ajustement = $uidn;
-        
-        
-        //$parties->miseajourcoup($trait,$cip);
-        
         header('Location: index.php?action=mes parties');
     }
 

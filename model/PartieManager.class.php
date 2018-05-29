@@ -446,13 +446,6 @@ class PartieManager extends CoupManager
         header('Location: index.php?action=mes parties');
     }
     
-    public function miseajourcoup($trait,$gid)
-    {
-        $sql = 'UPDATE parties set trait=?,date_dernier_coup=now() where gid=?';
-        $this->executerRequete($sql, array($trait,$gid));
-    }
-    
-    
     public function effacerpartie($nopartie)
     {
         $uidActif = $_SESSION['uid'];

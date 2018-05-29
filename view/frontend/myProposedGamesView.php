@@ -66,7 +66,7 @@ else
 ?>
 
 <div class="choix">
-    <a href="?action=mes parties&amp;folder=-1">Mes parties en cours</a><br />
+    <a href="?action=mes parties">Mes parties en cours</a><br />
     <a href="?action=parties proposées">Les parties proposées par les autres joueurs</a><br /><br />
     <a href="?action=proposer partie">Proposer une partie</a>
 </div>

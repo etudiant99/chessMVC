@@ -232,55 +232,26 @@ class JoueurManager extends StatistiqueManager
 
     public function traiterinfos($sexe,$pays,$naissance)
     {
-        // Connexion a la base de données
-        try
-        {
-            $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        }
-        Catch (PDOException $e)
-        {
-            die("Erreur ! : ".$e->getMessage());
-        } 
-
-        $uidActif = $_SESSION['uid'];
-        
-        $requete = "update users set sexe = '$sexe', pays = '$pays', naissance = '$naissance' where uid=$uidActif";
-        
-        $dbh->query($requete);
+        $uidActif = $_SESSION['uid'];    
+        $sql = "update users set sexe = ?, pays = ?, naissance = ? where uid=?";
+        $this->executerRequete($sql, array($sexe,$pays,$naissance,$uidActif));
         header('Location: ?action=profil');
         
         return;
     }
 
-    public function traiterpassword($pw1,$pw2)
+    public function traiterpassword($nouveau_mot_de_passe,$confirmation_mot_de_passe)
     {
-        // Connexion a la base de données
-        try
-        {
-            $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        }
-        Catch (PDOException $e)
-        {
-            die("Erreur ! : ".$e->getMessage());
-        } 
-
         $uidActif = $_SESSION['uid'];
-        $nouveau_mot_de_passe = str_replace("'", "", $dbh->quote($pw1));
-        $confirmation_mot_de_passe = str_replace("'", "", $dbh->quote($pw2));
 
         if ($nouveau_mot_de_passe != $confirmation_mot_de_passe)
             header('Location: ?action=profil');
         else
         {
             $password_crypte = md5($nouveau_mot_de_passe);
-            $requete = "update login set bidon = '$password_crypte' where uid='$uidActif'";
-            
-            $resultat = $dbh->query($requete);
-            if ($resultat == true)
-            
-            // Fermeture de la connection
-            $dbh = NULL;
-            
+            $sql = "update login set bidon = ? where uid=?";
+            $resultat = $this->executerRequete($sql, array($password_crypte,$uidActif));
+                        
             unset($password_crypte);  
             unset($reception_action);
             
@@ -320,22 +291,18 @@ class JoueurManager extends StatistiqueManager
 
     public function updatephoto($uidActif)
     {
-        $dbh = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        $sql = "update users set photo = 'o' where uid='".$uidActif."'";
-        $dbh->query($sql);
-        $dbh = NULL;
+        $sql = "update users set photo = 'o' where uid=?";
+        $this->executerRequete($sql, array($uidActif));
     }
     
     public function effacer($uid)
-    {
-        $db = new PDO(SQL_DSN, SQL_USERNAME, SQL_PASSWORD);
-        
-        $requete = "delete from login where uid=$uid";
-        $db->exec($requete);
-        $requete = "delete from users where uid=$uid";
-        $db->exec($requete);
-        $requete = "delete from statistiques where uid=$uid";
-        $db->exec($requete);
+    {   
+        $sql = "delete from login where uid=?";
+        $this->executerRequete($sql, array($uid));
+        $sql = "delete from users where uid=?";
+        $this->executerRequete($sql, array($uid));
+        $sql = "delete from statistiques where uid=?";
+        $this->executerRequete($sql, array($uid));
         
         header('Location:  ?action=les joueurs');
     }
